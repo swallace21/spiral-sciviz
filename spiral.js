@@ -73,19 +73,19 @@ svg.selectAll("circle.tick")
 
 
 var count = 0
-d3.json('data.json', function(data) {
+d3.json('data.json', function(userData) {
 
 	/* Process data */
 	var data = {};
-	for(var k in data) {
+	for(var k in userData) {
 
 		data[k] = [];
-		var days = Object.keys(data[k]);
+		var days = Object.keys(userData[k]);
 		for(var i = 0; i < days.length; i++) {
 			for(var j = 0; j < num_axes; j++) {
-				data[k].push( { i : (i*num_axes)+j, d: data[k][days[i]][j] } )
-        //console.log(i + ' - ' + j + ' - ' + data[k][days[i]][j]);
-        var val = data[k][days[i]][j];
+				data[k].push( { i : (i*num_axes)+j, d: userData[k][days[i]][j] } )
+        //console.log(i + ' - ' + j + ' - ' + userData[k][days[i]][j]);
+        var val = userData[k][days[i]][j];
 
         if(val == 0 || val == 7) {
           svg.selectAll(".spiral") //loops but does not fill
@@ -103,7 +103,7 @@ d3.json('data.json', function(data) {
             .data([[pieces[count], pieces[count+1]]])
           .enter().append('path')
             .style('opacity', 1.0)
-            .style('stroke', color(data[k][days[i]][j])) //just to show it can be colored
+            .style('stroke', color(userData[k][days[i]][j])) //just to show it can be colored
             .style('stroke-width', rings*0.55)
             //.style("stroke-dasharray", ".25,.5")
           .attr("class", "spiral2")
