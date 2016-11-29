@@ -154,16 +154,24 @@ d3.json('data.json', function(userData) {
         //console.log(i + ' - ' + j + ' - ' + userData[k][days[i]][j]);
         var val = userData[k][days[i]][j];
 
+        var dash;
+        if(count >= 2400 && count <= 2591) {
+          dash = ".5, 0, 4, 0.2";
+        } else {
+          dash = 0;
+        }
+
         if(val == 0 || val == 8) {
           svg.selectAll(".spiral") //loops but does not fill
             .data([[pieces[count], pieces[count+1]]])
           .enter().append('path')
             .style('opacity', 1.0)
             .style('stroke', '#eee') //just to show it can be colored
-            .style('stroke-width', 1)
-            //.style("stroke-dasharray", ".25,.5")
+            .style('stroke-width', 4)
+            .style("stroke-dasharray", ".5,.5")
           .attr("class", "spiral"+count)
           .attr("d", spiral)
+          .attr("id", count)
           .on('mouseover', updateStatus)
           .on('mouseout', clearStatus)
           .attr("transform", function(d) { return "rotate(" + 0 + ")" })
@@ -173,13 +181,13 @@ d3.json('data.json', function(userData) {
           .enter().append('path')
             .style('opacity', 1.0)
             .style('stroke', color(userData[k][days[i]][j])) //just to show it can be colored
-            .style('stroke-width', rings*0.55)
-            //.style("stroke-dasharray", ".25,.5")
+            .style('stroke-width', rings*0.53)
+            .style("stroke-dasharray", dash)
           .attr("class", "spiral"+count)
           .attr("d", spiral)
+          .attr("id", count)
           .on('mouseover', updateStatus)
           .on('mouseout', clearStatus)
-          .attr("id", count)
           .attr("transform", function(d) { return "rotate(" + 0 + ")" })
         }
 
