@@ -5,8 +5,11 @@ var width = 1000,
     start_spiral = 4,
     start = 0,
     end = 32,
-    rings = end - start_spiral;
+    rings = end - start_spiral
+    segmentHeight = 20;
 var margin = {top: 20, right: 40, bottom: 20, left: 40};
+
+var strk_color, strk_opacity, strk_width, strk_dash;
 
 var theta = function(r) {
   return 2*Math.PI*r;
@@ -24,6 +27,7 @@ var angle = d3.scale.linear()
   .domain([0,num_axes])
   .range([0,360])
 
+//SW - 28 = max circles!
 var offset = radius + Math.ceil(28/ num_axes) * 18;
 
 var svg = d3.select("#chart").append("svg")
@@ -34,7 +38,8 @@ var svg = d3.select("#chart").append("svg")
     .attr("transform", "translate(" + width/2 + "," + (height/2+8) +")");
 
 //DATA - Generates even spiral for entire clock
-var pieces = d3.range(start_spiral, end, (end-start)/width); //1.041667
+//var pieces = d3.range(start_spiral, end, (end-start)/width); //1.041667 //not used right now
+
 
 var cc = 1
 var add = 1.00/num_axes
@@ -63,14 +68,73 @@ svg.append("text")
   .attr("y", -height/2+end)
   .attr("text-anchor", "middle")
 
-svg.selectAll("circle.tick")
-    .data(d3.range(end,start,(start-end)/4))
-  .enter().append("circle")
-    .attr("class", "tick")
-    .attr("cx", 0)
-    .attr("cy", 0)
-    .attr("r", function(d) { return radius(d); })
+/* SW - int conversion
+var number = 132943154134;
 
+// convert number to a string, then extract the first digit
+var one = String(number).charAt(0);
+
+// convert the first digit back to an integer
+var one_as_number = Number(one);
+*/
+
+//interactions
+//// Events
+function updateStatus() {
+  var data = d3.select(this).data()[0];
+  var id = d3.select(this).attr('id');
+
+  strk_color = d3.select(this).style('stroke');
+  strk_opacity = d3.select(this).style('opacity');
+  strk_width = d3.select(this).style('stroke-width');
+  strk_dash = d3.select(this).style('stroke-dasharray');
+
+  d3.select(this).style('opacity', strk_opacity-0.4);
+
+  var flag = true;
+  var nn = 569;
+  while(flag) {
+    var sel = ".spiral" + id;
+    console.log(sel + ": " + d3.select(sel).style('stroke'));
+    if(d3.select(sel).style('stroke') == "rgb(56, 108, 176)") {
+      //d3.select(sel).style('stroke', "#000");
+      //d3.select(this).style('stroke-width', '10px');
+      console.log(sel);
+    } else {
+      flag = false;
+    }
+    //nn++;
+    id++;
+  }
+
+/*
+  if(nsa == "rgb(56, 108, 176)") {
+    console.log(nsa);
+  }
+*/
+
+  /*
+  var month = months[data.i % months.length];
+  var year = 1910 + Math.floor(data.i / months.length);
+  var temperature = data.d;
+    d3.select('svg .period.label')
+      .text(month + ' ' + '');
+    d3.select('svg .temperature.label')
+      .text(temperature+'');
+  */
+}
+
+function clearStatus() {
+    d3.select(this).style('stroke', strk_color);
+    d3.select(this).style('opacity', strk_opacity);
+    d3.select(this).style('stroke-width', strk_width);
+    d3.select(this).style('stroke-dasharray', stroke-dasharray);
+
+    d3.select('svg .period.label')
+      .text('');
+    d3.select('svg .temperature.label')
+      .text('');
+}
 
 var count = 0
 d3.json('data.json', function(userData) {
@@ -95,8 +159,10 @@ d3.json('data.json', function(userData) {
             .style('stroke', '#eee') //just to show it can be colored
             .style('stroke-width', 1)
             //.style("stroke-dasharray", ".25,.5")
-          .attr("class", "spiral2")
+          .attr("class", "spiral"+count)
           .attr("d", spiral)
+          .on('mouseover', updateStatus)
+          .on('mouseout', clearStatus)
           .attr("transform", function(d) { return "rotate(" + 0 + ")" })
         } else {
           svg.selectAll(".spiral") //loops but does not fill
@@ -106,8 +172,11 @@ d3.json('data.json', function(userData) {
             .style('stroke', color(userData[k][days[i]][j])) //just to show it can be colored
             .style('stroke-width', rings*0.55)
             //.style("stroke-dasharray", ".25,.5")
-          .attr("class", "spiral2")
+          .attr("class", "spiral"+count)
           .attr("d", spiral)
+          .on('mouseover', updateStatus)
+          .on('mouseout', clearStatus)
+          .attr("id", count)
           .attr("transform", function(d) { return "rotate(" + 0 + ")" })
         }
 
@@ -155,17 +224,23 @@ svg.selectAll(".axis")
     .data(d3.range(num_axes))
   .enter().append("g")
     .attr("class", "axis")
-    .attr("transform", function(d) { return "rotate(" + -angle(d) + ")"; })
-  //.call(radial_tick)
+    .attr("transform", function(d) {
+      return "rotate(" + angle(d) + ")";
+    })
+  .call(radial_tick)
   .append("text")
     .attr("y", radius(end)+rings)
     .text(function(d) { return times[d]; })
     .attr("text-anchor", "middle")
-    .attr("transform", function(d) { return "rotate(" + 180 + ")" })
+    .attr("transform", function(d) {
+      //console.log(d);
+      return "rotate(" + 180 + ")"
+    })
+
 
 function radial_tick(selection) {
   selection.each(function(axis_num) {
-    d3.svg.axis()
+    d3.svg.axis() //controls where day labels are
       .scale(radius)
       .ticks(end)
       .tickValues(axis_num == tick_axis ? null : [])
@@ -176,18 +251,118 @@ function radial_tick(selection) {
       .attr("text-anchor", "bottom")
       .attr("transform", "rotate(" + angle(axis_num) + ")")
   });
-
-  /* Arc functions -- For Possible Color Gradients */
-  ir = function(d, i) {
-      return radius + Math.floor(i/num_axes) * height;
-  }
-  or = function(d, i) {
-      return radius + height + Math.floor(i/num_axes) * height;
-  }
-  sa = function(d, i) {
-      return (i * 2 * Math.PI) / num_axes;
-  }
-  ea = function(d, i) {
-      return ((i + 1) * 2 * Math.PI) / num_axes;
-  }
 }
+
+
+/* Arc functions -- For Possible Color Gradients */
+ir = function(d, i) {
+    return radius + Math.floor(i/num_axes) * height;
+}
+or = function(d, i) {
+    return radius + height + Math.floor(i/num_axes) * height;
+}
+sa = function(d, i) {
+    return (i * 2 * Math.PI) / num_axes;
+}
+ea = function(d, i) {
+    return ((i + 1) * 2 * Math.PI) / num_axes;
+}
+
+    var donutData = [
+      {name: "6pm", 	value: 10},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "7pm", 	value: 10},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "8pm", 	value: 10},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "9pm", 	value: 10},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "10pm", 	value: 10},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "11pm", 	value: 10},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "Midnight", 	value: 10},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "1am", 	value: 10},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "2am", 	value: 10},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "3am", 	value: 10},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "4am", 	value: 10},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "5am", 	value: 10},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "6am", 	value: 10},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "7am", 	value: 10},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "8am", 	value: 10},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "9am", 	value: 10},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "10am", 	value: 10},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "11am", 	value: 10},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "Noon", 	value: 10},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "1pm", 	value: 10},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "2pm", 	value: 10},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "3pm", 	value: 10},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "4pm", 	value: 10},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "5pm", 	value: 10},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1},
+      {name: "", 	value: 1}
+    ];
