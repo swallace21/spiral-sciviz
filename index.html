@@ -4,39 +4,47 @@
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
     <title>Spiral</title>
     <!--<script type="text/javascript" src="http://d3js.org/d3.v2.js"></script>-->
-    <script src="https://d3js.org/d3.v3.min.js"></script>
-    <style>
-      body {
-        font-family: 'Lucida Grande', 'Lucida Sans Unicode', 'Geneva', 'Verdana', sans-serif;
-        margin: 40px;
-      }
-      .axis path {
-        fill: none;
-        //stroke: #999;
-        //stroke-dasharray: 1 3;
-      }
-      .axis text {
-        font-size: 10px;
-        z-index: 100;
-        //stroke: #222;
-      }
-      text.title {
-        font-size: 24px;
-      }
-      circle.tick {
-        fill: #fff;
-        //stroke: #999;
-        //stroke-dasharray: 2 3;
-      }
-      path.spiral {
-        fill: none;
-        stroke: #ee8d18;
-        stroke-width: 2px;
-      }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/jquery-ui-1.10.0.custom.min.css">
   </head>
   <body>
+    <h1>Interactive Sleep Visualization</h1>
+    <h5 style="background:#eee; padding: 8px; margin-bottom:0px;">
+			<span style="color:#386cb0"> Blue: Normal Sleep </span><span style="color:#eee">OOO</span>
+      <span style="color:#beaed4"> Purple: Extra Sleep</span><span style="color:#eee">OOO</span>
+      <span style="color:#7fc97f"> Green: Nap</span><span style="color:#eee">OOO</span>
+      <span style="color:#ffff99"> Yellow: Noise Anomoly</span><span style="color:#eee">OOO</span>
+			<span style="color:#fdc086"> Orange: Movement Anomoly</span><span style="color:#eee">OOO</span>
+			<span style="color:#f0027f"> Magenta: Noise & Movement Anomoly</span><span style="color:#eee">OOO</span>
+    </h5>
+    <h5 style="background:#333; padding: 8px; margin-top:0px; margin-bottom:0px;">
+      <span style="color:#fff"> White: Awake</span><span style="color:#333">OOO</span>
+      <span style="color:#ddd"> Grey: Early Awakening</span><span style="color:#333">OOO</span>
+      <svg version="1.1" xmlns="http://www.w3.org/2000/svg" style="height:16px;padding-top: 0px;margin-top: 0px;width: 84px;top: 3px;position: relative;">
+        <line stroke='#eee' stroke-width="36px" stroke-dasharray=".25 .5" x1="0" y1="0" x2="80" y2="0"/>
+      </svg>
+      <span style="color:#fff"> Dashed: Weekend</span>
+    </h5>
+    <hr style="margin-top: 0px; margin-bottom: 0px; color: #eee;"></hr>
+
+    <table style="width:100%">
+      <tr>
+        <td style="width:33%"><h5>Filter by Sleep Rating</h5></td>
+        <td style="width:67%"><h5>Filter by Keywords</h5></td>
+      </tr>
+      <tr style="position: relative;top: -16px;">
+        <td style="width:33%"><div class="slider"></div></td>
+        <td style="width:67%"><div id="checkboxes"></div></td>
+      </tr>
+    </table>
+
+    <hr style="margin-top: 8px;margin-bottom: 0px; color: #eee;"></hr>
+
     <div id="chart"></div>
-    <script type="text/javascript" src="spiral.js"></script>
   </body>
+
+  <script src="https://d3js.org/d3.v3.min.js"></script>
+  <script src="js/jquery-1.9.1.min.js"></script>
+	<script src="js/jquery-ui-1.10.0.custom.min.js"></script>
+  <script type="text/javascript" src="spiral.js"></script>
 </html>

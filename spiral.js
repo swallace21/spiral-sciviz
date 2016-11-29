@@ -31,6 +31,9 @@ var angle = d3.scale.linear()
 var offset = radius + Math.ceil(28/ num_axes) * 18;
 
 var svg = d3.select("#chart").append("svg")
+    .style("margin-left", "auto")
+    .style("margin-right", "auto")
+    .style("display", "block")
     .attr("width", width+margin.left+margin.right)
     .attr("height", height)
     .attr("transform", "translate(" + parseInt(margin.left + offset) + "," + parseInt(margin.top + offset) + ")")
@@ -52,8 +55,8 @@ while(cc < (num_axes*(end-start_spiral))) {
 }
 
 //GRADIENT
-var domain = [0.0,   1.0,       2.0,       3.0,       4.0,       5.0,     6.0,     7.0];
-var range = ['#fff', '#386cb0', '#ffff99', '#fdc086', '#f0027f', '#ccc', 'purple', '#fff'];
+var domain = [0.0,   1.0,       2.0,       3.0,       4.0,       5.0,     6.0,       7.0,        8.0];
+var range = ['#fff', '#386cb0', '#ffff99', '#fdc086', '#f0027f', '#ccc', '#7fc97f',  '#beaed4',  '#fff'];
   var color = d3.scale.linear().domain(domain).range(range);
 
 var spiral = d3.svg.line.radial()
@@ -62,8 +65,9 @@ var spiral = d3.svg.line.radial()
   .radius(radius);
 
 svg.append("text")
-  .text("Prototype 4")
+  .text("Day & Sleep Data")
   .attr("class", "title")
+  .attr("id", "info")
   .attr("x", 0)
   .attr("y", -height/2+end)
   .attr("text-anchor", "middle")
@@ -91,15 +95,17 @@ function updateStatus() {
 
   d3.select(this).style('opacity', strk_opacity-0.4);
 
+  d3.select("svg .title").text("Day & Sleep Data for " + id);
+
   var flag = true;
   var nn = 569;
   while(flag) {
     var sel = ".spiral" + id;
-    console.log(sel + ": " + d3.select(sel).style('stroke'));
+    //console.log(sel + ": " + d3.select(sel).style('stroke'));
     if(d3.select(sel).style('stroke') == "rgb(56, 108, 176)") {
       //d3.select(sel).style('stroke', "#000");
       //d3.select(this).style('stroke-width', '10px');
-      console.log(sel);
+      //console.log(sel);
     } else {
       flag = false;
     }
@@ -128,12 +134,9 @@ function clearStatus() {
     d3.select(this).style('stroke', strk_color);
     d3.select(this).style('opacity', strk_opacity);
     d3.select(this).style('stroke-width', strk_width);
-    d3.select(this).style('stroke-dasharray', stroke-dasharray);
+    d3.select(this).style('stroke-dasharray', strk_dash);
 
-    d3.select('svg .period.label')
-      .text('');
-    d3.select('svg .temperature.label')
-      .text('');
+    d3.select("svg .title").text("Day & Sleep Data for ....");
 }
 
 var count = 0
@@ -151,7 +154,7 @@ d3.json('data.json', function(userData) {
         //console.log(i + ' - ' + j + ' - ' + userData[k][days[i]][j]);
         var val = userData[k][days[i]][j];
 
-        if(val == 0 || val == 7) {
+        if(val == 0 || val == 8) {
           svg.selectAll(".spiral") //loops but does not fill
             .data([[pieces[count], pieces[count+1]]])
           .enter().append('path')
@@ -227,7 +230,6 @@ svg.selectAll(".axis")
     .attr("transform", function(d) {
       return "rotate(" + angle(d) + ")";
     })
-  .call(radial_tick)
   .append("text")
     .attr("y", radius(end)+rings)
     .text(function(d) { return times[d]; })
@@ -236,23 +238,6 @@ svg.selectAll(".axis")
       //console.log(d);
       return "rotate(" + 180 + ")"
     })
-
-
-function radial_tick(selection) {
-  selection.each(function(axis_num) {
-    d3.svg.axis() //controls where day labels are
-      .scale(radius)
-      .ticks(end)
-      .tickValues(axis_num == tick_axis ? null : [])
-      .orient("top")(d3.select(this))
-
-    d3.select(this)
-      .selectAll("text")
-      .attr("text-anchor", "bottom")
-      .attr("transform", "rotate(" + angle(axis_num) + ")")
-  });
-}
-
 
 /* Arc functions -- For Possible Color Gradients */
 ir = function(d, i) {
@@ -366,3 +351,52 @@ ea = function(d, i) {
       {name: "", 	value: 1},
       {name: "", 	value: 1}
     ];
+
+
+
+////SLIDER
+var widthSlider = 280;
+
+var x = d3.scale.linear()
+    .domain([1, 100])
+    .range([0, widthSlider])
+    .clamp(true);
+
+var dispatch = d3.dispatch("sliderChange");
+
+var slider = d3.select(".slider")
+    .style("width", widthSlider + "px");
+
+var sliderTray = slider.append("div")
+    .attr("class", "slider-tray");
+
+var sliderHandle = slider.append("div")
+    .attr("class", "slider-handle");
+
+sliderHandle.append("div")
+    .attr("class", "slider-handle-icon")
+
+slider.call(d3.behavior.drag()
+    .on("dragstart", function() {
+      dispatch.sliderChange(x.invert(d3.mouse(sliderTray.node())[0]));
+      d3.event.sourceEvent.preventDefault();
+    })
+    .on("drag", function() {
+      dispatch.sliderChange(x.invert(d3.mouse(sliderTray.node())[0]));
+    }));
+
+dispatch.on("sliderChange.slider", function(value) {
+  sliderHandle.style("left", x(value) + "px")
+});
+
+////CEHCKBOXES
+var keywords = ["work", "alcohol", "newmoon"]
+
+keywords.forEach(function(n) {
+  console.log("checkboxes: " + n);
+  d3.select("#checkboxes")
+    .append("span")
+    .style("margin-right", "24px")
+    .html("<label class='control control--checkbox'>" + n + "<input type='checkbox' id='" + n + "' checked/><div class='control__indicator'></div></label>");
+    //.html("<label class='inline'><input type='checkbox' id='" + n + "' checked><span class='lbl'> </span>" + n + "</label>");
+});
