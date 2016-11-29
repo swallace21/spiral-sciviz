@@ -101,15 +101,12 @@ function updateStatus() {
   var nn = 569;
   while(flag) {
     var sel = ".spiral" + id;
-    //console.log(sel + ": " + d3.select(sel).style('stroke'));
-    if(d3.select(sel).style('stroke') == "rgb(56, 108, 176)") {
-      //d3.select(sel).style('stroke', "#000");
-      //d3.select(this).style('stroke-width', '10px');
-      //console.log(sel);
+    if(d3.select(sel).style('stroke') == "rgb(238, 238, 238)") {
+      d3.select(sel).style('stroke', "rgb(170, 170, 170)");
+      d3.select(this).style('stroke-width', '12px');
     } else {
       flag = false;
     }
-    //nn++;
     id++;
   }
 
@@ -131,12 +128,26 @@ function updateStatus() {
 }
 
 function clearStatus() {
+    var id = d3.select(this).attr('id');
     d3.select(this).style('stroke', strk_color);
     d3.select(this).style('opacity', strk_opacity);
     d3.select(this).style('stroke-width', strk_width);
     d3.select(this).style('stroke-dasharray', strk_dash);
 
     d3.select("svg .title").text("Day & Sleep Data for ....");
+
+    var flag = true;
+    id++;
+    while(flag) {
+      var sel = ".spiral" + id;
+      if(d3.select(sel).style('stroke') == "rgb(170, 170, 170)") {
+        d3.select(sel).style('stroke', "rgb(238, 238, 238)");
+        d3.select(sel).style('stroke-width', '8px');
+      } else {
+        flag = false;
+      }
+      id++;
+    }
 }
 
 var count = 0
@@ -156,7 +167,7 @@ d3.json('data.json', function(userData) {
 
         var dash;
         if(count >= 2400 && count <= 2591) {
-          dash = ".5, 0, 4, 0.2";
+          dash = ".5, 0, 5, 0.25";
         } else {
           dash = 0;
         }
@@ -165,10 +176,10 @@ d3.json('data.json', function(userData) {
           svg.selectAll(".spiral") //loops but does not fill
             .data([[pieces[count], pieces[count+1]]])
           .enter().append('path')
-            .style('opacity', 1.0)
+            .style('opacity', 0.6)
             .style('stroke', '#eee') //just to show it can be colored
-            .style('stroke-width', 4)
-            .style("stroke-dasharray", ".5,.5")
+            .style('stroke-width', 8)
+            .style("stroke-dasharray", ".5,.25")
           .attr("class", "spiral"+count)
           .attr("d", spiral)
           .attr("id", count)
@@ -401,7 +412,7 @@ dispatch.on("sliderChange.slider", function(value) {
 var keywords = ["work", "alcohol", "newmoon"]
 
 keywords.forEach(function(n) {
-  console.log("checkboxes: " + n);
+  //console.log("checkboxes: " + n);
   d3.select("#checkboxes")
     .append("span")
     .style("margin-right", "24px")
