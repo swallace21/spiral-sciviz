@@ -194,24 +194,24 @@ function handleClick(cb) {
     }
 
     var opacity = d3.select(sel).style('opacity');
-    if(flag) {
+    if(flag) { //if no keyword found - decrease opacity
       if(opacity == 1.0) {
         d3.select(sel).style('opacity', 0.4);
-      } else if(opacity == 0.5) {
+      } else if(opacity == 0.5) { //slider
         d3.select(sel).style('opacity', 0.2);
-      } else if(opacity == 0.4) {
+      } else if(opacity == 0.4) { //keyword
         d3.select(sel).style('opacity', 0.4);
-      } else if(opacity == 0.2) {
+      } else if(opacity == 0.2) { //both
         d3.select(sel).style('opacity', 0.2);
       }
-    } else {
+    } else { //keyword found - increase opacity
       if(opacity == 1.0) {
         d3.select(sel).style('opacity', 1.0);
-      } else if(opacity == 0.5) {
+      } else if(opacity == 0.5) { //slider
         d3.select(sel).style('opacity', 0.5);
-      } else if(opacity == 0.4) {
+      } else if(opacity == 0.4) { //keyword
         d3.select(sel).style('opacity', 1.0);
-      } else if(opacity == 0.2) {
+      } else if(opacity == 0.2) { //both
         d3.select(sel).style('opacity', 0.5);
       }
     }
@@ -219,7 +219,7 @@ function handleClick(cb) {
   });
 }
 
-d3.json('data/data12.json', function(userData) {
+d3.json('data/data124.json', function(userData) {
   //console.log("Start Data 12 Load...");
 
   daysTemp = userData['Days'];
@@ -361,16 +361,26 @@ dispatch.on("sliderChange.slider", function(value) {
     if(d3.select(sel).style('stroke') != "rgb(238, 238, 238)") {
       var opacity = d3.select(sel).style('opacity');
 
-      if(value > rawData[count]) {
+      if(value > rawData[count]) { //decrease opacity
         if(opacity == 1.0) {
           d3.select(sel).style('opacity', 0.5);
-        } else if(opacity == 0.5) {
+        } else if(opacity == 0.5) { //slider
           d3.select(sel).style('opacity', 0.5);
-        } else if(opacity == 0.4) {
+        } else if(opacity == 0.4) { //keyword
+          d3.select(sel).style('opacity', 0.2);
+        } else if(opacity == 0.2) { //both
           d3.select(sel).style('opacity', 0.2);
         }
-      } else {
-        d3.select(sel).style('opacity', 1.0);
+      } else { //increase opacity
+        if(opacity == 1.0) {
+          d3.select(sel).style('opacity', 1.0);
+        } else if(opacity == 0.5) { //slider
+          d3.select(sel).style('opacity', 1.0);
+        } else if(opacity == 0.4) { //keyword
+          d3.select(sel).style('opacity', 0.4);
+        } else if(opacity == 0.2) { //both
+          d3.select(sel).style('opacity', 0.4);
+        }
       }
     }
     count++;
