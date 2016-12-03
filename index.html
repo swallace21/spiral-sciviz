@@ -11,7 +11,7 @@
     <h1>Interactive Sleep Visualization</h1>
     <h5 style="background:#eee; padding: 8px; margin-bottom:0px;">
 			<span style="color:#386cb0"> Blue: Normal Sleep </span><span style="color:#eee">OOO</span>
-      <span style="color:#beaed4"> Purple: Extra Sleep</span><span style="color:#eee">OOO</span>
+      <span style="color:#beaed4"> Purple: Overslept</span><span style="color:#eee">OOO</span>
       <span style="color:#7fc97f"> Green: Nap</span><span style="color:#eee">OOO</span>
       <span style="color:#ffff99"> Yellow: Noise Anomoly</span><span style="color:#eee">OOO</span>
 			<span style="color:#fdc086"> Orange: Movement Anomoly</span><span style="color:#eee">OOO</span>
@@ -27,24 +27,33 @@
     </h5>
     <hr style="margin-top: 0px; margin-bottom: 0px; color: #eee;"></hr>
 
+    <h5>Filter by Keywords</h5>
+    <div id="checkboxes" style="width:100%; line-height:24px"></div>
+
+
+    <h5>Filter by Sleep Rating</h5>
+    <div class="slider"></div>
+
+    <hr style="margin-top: 60px;margin-bottom: 0px; color: #eee;"></hr>
+<!--
     <table style="width:100%">
       <tr>
         <td style="width:33%"><h5>Filter by Sleep Rating</h5></td>
-        <td style="width:67%"><h5>Filter by Keywords</h5></td>
+        <td style="width:67%; padding-right: 32px"><h5>Filter by Keywords</h5></td>
       </tr>
       <tr style="position: relative;top: -16px;">
-        <td style="width:33%"><div class="slider"></div></td>
-        <td style="width:67%"><div id="checkboxes"></div></td>
+        <td style="width:33%; padding-right: 32px"><div class="slider"></div></td>
+        <td style="width:67%"><div id="checkboxes" style="width:100%"></div></td>
       </tr>
     </table>
 
     <hr style="margin-top: 8px;margin-bottom: 0px; color: #eee;"></hr>
+-->
 
     <div id="chart"></div>
   </body>
 
   <script src="https://d3js.org/d3.v3.min.js"></script>
-  <script src="js/jquery-1.9.1.min.js"></script>
-	<script src="js/jquery-ui-1.10.0.custom.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.17.0/moment.min.js"></script>
   <script type="text/javascript" src="spiral.js"></script>
 </html>

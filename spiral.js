@@ -9,7 +9,26 @@ var width = 1000,
     segmentHeight = 20;
 var margin = {top: 20, right: 40, bottom: 20, left: 40};
 
+//data arrays
+var keywords = [];
+var keywordsActive = [];
+var days = [];
+var weekends = [];
+var rawData = [];
+
 var strk_color, strk_opacity, strk_width, strk_dash;
+
+/* Prepare labels */
+var times = [
+  "Midnight","","","","1am","","","","2am","","","",
+  "3am","","","","4am","","","","5am","","","",
+  "6am","","","","7am","","","","8am","","","",
+  "9am","","","","10am","","","","11am","","","",
+  "Noon","","","","1pm","","","","2pm","","","",
+  "3pm","","","","4pm","","","","5pm","","","",
+  "6pm","","","","7pm","","","","8pm","","","",
+  "9pm","","","","10pm","","","","11pm","","",""
+];
 
 var theta = function(r) {
   return 2*Math.PI*r;
@@ -30,19 +49,19 @@ var angle = d3.scale.linear()
 //SW - 28 = max circles!
 var offset = radius + Math.ceil(28/ num_axes) * 18;
 
-var svg = d3.select("#chart").append("svg")
-    .style("margin-left", "auto")
-    .style("margin-right", "auto")
-    .style("display", "block")
-    .attr("width", width+margin.left+margin.right)
-    .attr("height", height)
-    .attr("transform", "translate(" + parseInt(margin.left + offset) + "," + parseInt(margin.top + offset) + ")")
-  .append("g")
-    .attr("transform", "translate(" + width/2 + "," + (height/2+8) +")");
-
-//DATA - Generates even spiral for entire clock
-//var pieces = d3.range(start_spiral, end, (end-start)/width); //1.041667 //not used right now
-
+/* Arc functions -- For Possible Color Gradients */
+ir = function(d, i) {
+    return radius + Math.floor(i/num_axes) * height;
+}
+or = function(d, i) {
+    return radius + height + Math.floor(i/num_axes) * height;
+}
+sa = function(d, i) {
+    return (i * 2 * Math.PI) / num_axes;
+}
+ea = function(d, i) {
+    return ((i + 1) * 2 * Math.PI) / num_axes;
+}
 
 var cc = 1
 var add = 1.00/num_axes
@@ -59,6 +78,16 @@ var domain = [0.0,   1.0,       2.0,       3.0,       4.0,       5.0,     6.0,  
 var range = ['#fff', '#386cb0', '#ffff99', '#fdc086', '#f0027f', '#ccc', '#7fc97f',  '#beaed4',  '#fff'];
   var color = d3.scale.linear().domain(domain).range(range);
 
+var svg = d3.select("#chart").append("svg")
+    .style("margin-left", "auto")
+    .style("margin-right", "auto")
+    .style("display", "block")
+    .attr("width", width+margin.left+margin.right)
+    .attr("height", height)
+    .attr("transform", "translate(" + parseInt(margin.left + offset) + "," + parseInt(margin.top + offset) + ")")
+  .append("g")
+    .attr("transform", "translate(" + width/2 + "," + (height/2+8) +")");
+
 var spiral = d3.svg.line.radial()
   .interpolate("cardinal")
   .angle(theta)
@@ -71,16 +100,6 @@ svg.append("text")
   .attr("x", 0)
   .attr("y", -height/2+end)
   .attr("text-anchor", "middle")
-
-/* SW - int conversion
-var number = 132943154134;
-
-// convert number to a string, then extract the first digit
-var one = String(number).charAt(0);
-
-// convert the first digit back to an integer
-var one_as_number = Number(one);
-*/
 
 //interactions
 //// Events
@@ -95,7 +114,10 @@ function updateStatus() {
 
   d3.select(this).style('opacity', strk_opacity-0.4);
 
-  d3.select("svg .title").text("Day & Sleep Data for " + id);
+  d3.select("svg .title").text(days[String((id/96)).split(".")[0]]);
+  //console.log('#########################################');
+  //console.log(id + " divide " + String((id/96)).split(".")[0])
+  //console.log(days[String((id/96)).split(".")[0]]);
 
   var flag = true;
   var nn = 569;
@@ -109,22 +131,6 @@ function updateStatus() {
     }
     id++;
   }
-
-/*
-  if(nsa == "rgb(56, 108, 176)") {
-    console.log(nsa);
-  }
-*/
-
-  /*
-  var month = months[data.i % months.length];
-  var year = 1910 + Math.floor(data.i / months.length);
-  var temperature = data.d;
-    d3.select('svg .period.label')
-      .text(month + ' ' + '');
-    d3.select('svg .temperature.label')
-      .text(temperature+'');
-  */
 }
 
 function clearStatus() {
@@ -150,96 +156,153 @@ function clearStatus() {
     }
 }
 
-var count = 0
-d3.json('data.json', function(userData) {
+function handleClick(cb) {
+  //console.log("Click, new value = " + cb.checked);
+  //console.log("Click, new value = " + cb.id);
+  //console.log("Click, new value = " + document.getElementById("newmoon").checked);
 
-	/* Process data */
-	var data = {};
-	for(var k in userData) {
+  keywordsActive = [];
+  keywords.forEach(function(k) {
+    keywordsActive.push(document.getElementById(k).checked);
+  });
 
-		data[k] = [];
-		var days = Object.keys(userData[k]);
-		for(var i = 0; i < days.length; i++) {
-			for(var j = 0; j < num_axes; j++) {
-				data[k].push( { i : (i*num_axes)+j, d: userData[k][days[i]][j] } )
-        //console.log(i + ' - ' + j + ' - ' + userData[k][days[i]][j]);
-        var val = userData[k][days[i]][j];
 
-        var dash;
-        if(count >= 2400 && count <= 2591) {
-          dash = ".5, 0, 5, 0.25";
-        } else {
-          dash = 0;
+  //console.log('######################');
+  var countD = 0;
+  rawData.forEach(function(d) {
+    var countK = 6;
+    var sel = ".spiral" + countD;
+    var flag = true;
+    var BreakException = {};
+    try {
+      keywordsActive.forEach(function(k) {
+        //console.log(keywords[countK] + ' = ' + k);
+        var bool = String(d).charAt(countK);
+
+        if(bool == 1 && k == true) {
+          //console.log('######################');
+          //console.log(bool + ' && ' + keywords[countK] + ' = ' + k);
+          //console.log(countD);
+          flag = false;
+          throw BreakException;
         }
+        countK++;
+      });
+    } catch (e) {
+      console.log('BREAK ###################### ' + countK);
+      if (e !== BreakException) throw e;
+    }
 
-        if(val == 0 || val == 8) {
-          svg.selectAll(".spiral") //loops but does not fill
-            .data([[pieces[count], pieces[count+1]]])
-          .enter().append('path')
-            .style('opacity', 0.6)
-            .style('stroke', '#eee') //just to show it can be colored
-            .style('stroke-width', 8)
-            .style("stroke-dasharray", ".5,.25")
-          .attr("class", "spiral"+count)
-          .attr("d", spiral)
-          .attr("id", count)
-          .on('mouseover', updateStatus)
-          .on('mouseout', clearStatus)
-          .attr("transform", function(d) { return "rotate(" + 0 + ")" })
-        } else {
-          svg.selectAll(".spiral") //loops but does not fill
-            .data([[pieces[count], pieces[count+1]]])
-          .enter().append('path')
-            .style('opacity', 1.0)
-            .style('stroke', color(userData[k][days[i]][j])) //just to show it can be colored
-            .style('stroke-width', rings*0.53)
-            .style("stroke-dasharray", dash)
-          .attr("class", "spiral"+count)
-          .attr("d", spiral)
-          .attr("id", count)
-          .on('mouseover', updateStatus)
-          .on('mouseout', clearStatus)
-          .attr("transform", function(d) { return "rotate(" + 0 + ")" })
-        }
+    var opacity = d3.select(sel).style('opacity');
+    if(flag) {
+      if(opacity == 1.0) {
+        d3.select(sel).style('opacity', 0.4);
+      } else if(opacity == 0.5) {
+        d3.select(sel).style('opacity', 0.2);
+      } else if(opacity == 0.4) {
+        d3.select(sel).style('opacity', 0.4);
+      } else if(opacity == 0.2) {
+        d3.select(sel).style('opacity', 0.2);
+      }
+    } else {
+      if(opacity == 1.0) {
+        d3.select(sel).style('opacity', 1.0);
+      } else if(opacity == 0.5) {
+        d3.select(sel).style('opacity', 0.5);
+      } else if(opacity == 0.4) {
+        d3.select(sel).style('opacity', 1.0);
+      } else if(opacity == 0.2) {
+        d3.select(sel).style('opacity', 0.5);
+      }
+    }
+    countD++;
+  });
+}
 
-        count++
-			}
-		}
-	}
+d3.json('data/data12.json', function(userData) {
+  //console.log("Start Data 12 Load...");
+
+  daysTemp = userData['Days'];
+  daysTemp.forEach(function(day) {
+    ////console.log("DAYS " + day);
+    var localTime = '02/18/15'
+    localTime = moment(day).format('ddd MMM Do, YYYY');
+    weekend = moment(day).format('ddd');
+    ////console.log("DAYS " + localTime);
+    days.push(localTime);
+    if(weekend == 'Sat' || weekend == 'Sun') {
+      weekends.push("1");
+    } else {
+      weekends.push("0");
+    }
+  });
+
+  ////CHECKBOXES
+  keywords = userData['Keywords'];
+  keywords.forEach(function(n) {
+    ////console.log("checkboxes: " + n);
+    d3.select("#checkboxes")
+      .append("span")
+      .style("margin-right", "24px")
+      .html("<label class='control control--checkbox'>" + n + "<input type='checkbox' id='" + n + "' checked onclick='handleClick(this);'/><div class='control__indicator'></div></label>");
+  });
+
+  rawData = userData['Data'];
+  var count = 0;
+  rawData.forEach(function(d) {
+        //POSITIONS:
+        //0-3: rating
+        //4: weekend boolean
+        //5: sleep state
+        //6: start of keywords
+
+       ////console.log(d);
+
+       // convert number to a string, then extract the first digit
+       var val = String(d).charAt(5);
+       // convert the first digit back to an integer
+       var valInt = Number(val);
+       if(val > 4) {
+         //console.log(val);
+       }
+
+       var dash = 0;
+       if(weekends[String((count/96)).split(".")[0]] == 1) { //checks for weekends
+         dash = ".5, 0, 5, 0.25";
+       }
+
+       if(val == 0 || val == 8) {
+         svg.selectAll(".spiral") //loops but does not fill
+           .data([[pieces[count], pieces[count+1]]])
+         .enter().append('path')
+           .style('opacity', 0.6)
+           .style('stroke', '#eee') //just to show it can be colored
+           .style('stroke-width', 8)
+           .style("stroke-dasharray", ".5,.25")
+         .attr("class", "spiral"+count)
+         .attr("d", spiral)
+         .attr("id", count)
+         .on('mouseover', updateStatus)
+         .on('mouseout', clearStatus)
+         .attr("transform", function(d) { return "rotate(" + 0 + ")" })
+       } else {
+         svg.selectAll(".spiral") //loops but does not fill
+           .data([[pieces[count], pieces[count+1]]])
+         .enter().append('path')
+           .style('opacity', 1.0)
+           .style('stroke', color(val)) //just to show it can be colored
+           .style('stroke-width', rings*0.53)
+           .style("stroke-dasharray", dash)
+         .attr("class", "spiral"+count)
+         .attr("d", spiral)
+         .attr("id", count)
+         .on('mouseover', updateStatus)
+         .on('mouseout', clearStatus)
+         .attr("transform", function(d) { return "rotate(" + 0 + ")" })
+       }
+       count++
+  });
 });
-
-/* Prepare labels */
-var times = [
-  "Midnight","","","","1am","","","","2am","","","",
-  "3am","","","","4am","","","","5am","","","",
-  "6am","","","","7am","","","","8am","","","",
-  "9am","","","","10am","","","","11am","","","",
-  "Noon","","","","1pm","","","","2pm","","","",
-  "3pm","","","","4pm","","","","5pm","","","",
-  "6pm","","","","7pm","","","","8pm","","","",
-  "9pm","","","","10pm","","","","11pm","","",""
-];
-
-var days = [
-  "Feb 19-20",
-  "Feb 20-21",
-  "Feb 22-23",
-  "Feb 23-24",
-  "Feb 24-25",
-  "Feb 25-26",
-  "Feb 26-27",
-  "Feb 27-28", "Feb 28 - Mar 1",
-  "March 1-2", "March 2-3",
-  "March 3-4", "March 4-5",
-  "March 5-6", "March 6-7",
-  "March 7-8", "March 8-9",
-  "March 9-10", "March 10-11",
-  "March 11-12", "March 12-13",
-  "March 13-14", "March 14-15",
-  "March 15-16", "March 16-17",
-  "March 17-18", "March 18-19",
-  "March 19-20"
-];
 
 /* LABELS */
 svg.selectAll(".axis")
@@ -254,130 +317,15 @@ svg.selectAll(".axis")
     .text(function(d) { return times[d]; })
     .attr("text-anchor", "middle")
     .attr("transform", function(d) {
-      //console.log(d);
+      ////console.log(d);
       return "rotate(" + 180 + ")"
     })
 
-/* Arc functions -- For Possible Color Gradients */
-ir = function(d, i) {
-    return radius + Math.floor(i/num_axes) * height;
-}
-or = function(d, i) {
-    return radius + height + Math.floor(i/num_axes) * height;
-}
-sa = function(d, i) {
-    return (i * 2 * Math.PI) / num_axes;
-}
-ea = function(d, i) {
-    return ((i + 1) * 2 * Math.PI) / num_axes;
-}
-
-    var donutData = [
-      {name: "6pm", 	value: 10},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "7pm", 	value: 10},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "8pm", 	value: 10},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "9pm", 	value: 10},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "10pm", 	value: 10},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "11pm", 	value: 10},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "Midnight", 	value: 10},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "1am", 	value: 10},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "2am", 	value: 10},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "3am", 	value: 10},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "4am", 	value: 10},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "5am", 	value: 10},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "6am", 	value: 10},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "7am", 	value: 10},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "8am", 	value: 10},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "9am", 	value: 10},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "10am", 	value: 10},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "11am", 	value: 10},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "Noon", 	value: 10},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "1pm", 	value: 10},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "2pm", 	value: 10},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "3pm", 	value: 10},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "4pm", 	value: 10},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "5pm", 	value: 10},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1},
-      {name: "", 	value: 1}
-    ];
-
-
-
 ////SLIDER
-var widthSlider = 280;
+var widthSlider = getWidth() - 70;
 
 var x = d3.scale.linear()
-    .domain([1, 100])
+    .domain([1, 60])
     .range([0, widthSlider])
     .clamp(true);
 
@@ -406,16 +354,39 @@ slider.call(d3.behavior.drag()
 
 dispatch.on("sliderChange.slider", function(value) {
   sliderHandle.style("left", x(value) + "px")
+  value = value / 10;
+  var count = 0;
+  rawData.forEach(function(d) {
+    var sel = ".spiral" + count;
+    if(d3.select(sel).style('stroke') != "rgb(238, 238, 238)") {
+      var opacity = d3.select(sel).style('opacity');
+
+      if(value > rawData[count]) {
+        if(opacity == 1.0) {
+          d3.select(sel).style('opacity', 0.5);
+        } else if(opacity == 0.5) {
+          d3.select(sel).style('opacity', 0.5);
+        } else if(opacity == 0.4) {
+          d3.select(sel).style('opacity', 0.2);
+        }
+      } else {
+        d3.select(sel).style('opacity', 1.0);
+      }
+    }
+    count++;
+  });
 });
 
-////CEHCKBOXES
-var keywords = ["work", "alcohol", "newmoon"]
+function getWidth() {
+  if (self.innerWidth) {
+    return self.innerWidth;
+  }
 
-keywords.forEach(function(n) {
-  //console.log("checkboxes: " + n);
-  d3.select("#checkboxes")
-    .append("span")
-    .style("margin-right", "24px")
-    .html("<label class='control control--checkbox'>" + n + "<input type='checkbox' id='" + n + "' checked/><div class='control__indicator'></div></label>");
-    //.html("<label class='inline'><input type='checkbox' id='" + n + "' checked><span class='lbl'> </span>" + n + "</label>");
-});
+  if (document.documentElement && document.documentElement.clientWidth) {
+    return document.documentElement.clientWidth;
+  }
+
+  if (document.body) {
+    return document.body.clientWidth;
+  }
+}
