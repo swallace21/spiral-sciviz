@@ -15,6 +15,7 @@ var keywordsActive = [];
 var days = [];
 var weekends = [];
 var rawData = [];
+var hours = [];
 
 var opHigh = 1.0;
 var opSld = 0.5;
@@ -106,6 +107,14 @@ svg.append("text")
   .attr("y", -height/2+end)
   .attr("text-anchor", "middle")
 
+svg.append("text")
+  .text("Hours Slept")
+  .attr("class", "titleHrs")
+  .attr("id", "infoHrs")
+  .attr("x", 0)
+  .attr("y", 0)
+  .attr("text-anchor", "middle")
+
 //interactions
 //// Events
 function updateStatus() {
@@ -120,9 +129,7 @@ function updateStatus() {
   d3.select(this).style('opacity', strk_opacity-0.25);
 
   d3.select("svg .title").text(days[String((id/96)).split(".")[0]]);
-  //console.log('#########################################');
-  //console.log(id + " divide " + String((id/96)).split(".")[0])
-  //console.log(days[String((id/96)).split(".")[0]]);
+  d3.select("svg .titleHrs").text(hours[id] + ' Hours');
 
   var flag = true;
   var nn = 569;
@@ -146,6 +153,7 @@ function clearStatus() {
     d3.select(this).style('stroke-dasharray', strk_dash);
 
     d3.select("svg .title").text("Day & Sleep Data for ....");
+    d3.select("svg .titleHrs").text('Hours Slept');
 
     var flag = true;
     id++;
@@ -260,7 +268,7 @@ function keywordsSwitch(keywordsActive) {
   });
 }
 
-d3.json('data/data124.json', function(userData) {
+d3.json('data/data12.json', function(userData) {
   //console.log("Start Data 12 Load...");
 
   daysTemp = userData['Days'];
@@ -277,6 +285,9 @@ d3.json('data/data124.json', function(userData) {
       weekends.push("0");
     }
   });
+
+  ////HOURS
+  hours = userData['Hours'];
 
   ////CHECKBOXES
   keywords = userData['Keywords'];
