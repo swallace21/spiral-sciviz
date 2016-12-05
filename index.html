@@ -27,28 +27,19 @@
     </h5>
     <hr style="margin-top: 0px; margin-bottom: 0px; color: #eee;"></hr>
 
-    <h5>Filter by Keywords</h5>
+    <table><tr>
+      <td><h5>Filter by Keywords</h5></td>
+      <td><button type="button" class="checkall" id="checkall" onclick="checkall();">Check All</button></td>
+      <td><button type="button" class="uncheckall" id="uncheckall" onclick="uncheckall();">Uncheck All</button></td>
+      <!--<td><button type="button" class="random" id="random" onclick="random();">Random</button></td>-->
+    </tr></table>
     <div id="checkboxes" style="width:100%; line-height:24px"></div>
 
 
-    <h5>Filter by Sleep Rating</h5>
+    <h5 id="sliderHeader">Filter by Sleep Rating > 0.00</h5>
     <div class="slider"></div>
 
     <hr style="margin-top: 60px;margin-bottom: 0px; color: #eee;"></hr>
-<!--
-    <table style="width:100%">
-      <tr>
-        <td style="width:33%"><h5>Filter by Sleep Rating</h5></td>
-        <td style="width:67%; padding-right: 32px"><h5>Filter by Keywords</h5></td>
-      </tr>
-      <tr style="position: relative;top: -16px;">
-        <td style="width:33%; padding-right: 32px"><div class="slider"></div></td>
-        <td style="width:67%"><div id="checkboxes" style="width:100%"></div></td>
-      </tr>
-    </table>
-
-    <hr style="margin-top: 8px;margin-bottom: 0px; color: #eee;"></hr>
--->
 
     <div id="chart"></div>
   </body>

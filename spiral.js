@@ -16,6 +16,11 @@ var days = [];
 var weekends = [];
 var rawData = [];
 
+var opHigh = 1.0;
+var opSld = 0.5;
+var opKey = 0.3;
+var opLow = 0.1;
+
 var strk_color, strk_opacity, strk_width, strk_dash;
 
 /* Prepare labels */
@@ -112,7 +117,7 @@ function updateStatus() {
   strk_width = d3.select(this).style('stroke-width');
   strk_dash = d3.select(this).style('stroke-dasharray');
 
-  d3.select(this).style('opacity', strk_opacity-0.4);
+  d3.select(this).style('opacity', strk_opacity-0.25);
 
   d3.select("svg .title").text(days[String((id/96)).split(".")[0]]);
   //console.log('#########################################');
@@ -156,17 +161,51 @@ function clearStatus() {
     }
 }
 
-function handleClick(cb) {
-  //console.log("Click, new value = " + cb.checked);
-  //console.log("Click, new value = " + cb.id);
-  //console.log("Click, new value = " + document.getElementById("newmoon").checked);
+function uncheckall() {
+  keywordsActive = [];
+  keywords.forEach(function(k) {
+    document.getElementById(k).checked = false;
+    keywordsActive.push(false);
+  });
 
+  keywordsSwitch(keywordsActive);
+}
+
+function checkall() {
+  keywordsActive = [];
+  keywords.forEach(function(k) {
+    document.getElementById(k).checked = true;
+    keywordsActive.push(true);
+  });
+
+  keywordsSwitch(keywordsActive);
+}
+
+function random() {
+  keywordsActive = [];
+  keywords.forEach(function(k) {
+    if(Math.floor((Math.random() * 2) + 1) == 1) {
+      document.getElementById(k).checked = true;
+      keywordsActive.push(true);
+    } else {
+      document.getElementById(k).checked = false;
+      keywordsActive.push(false);
+    }
+  });
+
+  keywordsSwitch(keywordsActive);
+}
+
+function handleClick(cb) {
   keywordsActive = [];
   keywords.forEach(function(k) {
     keywordsActive.push(document.getElementById(k).checked);
   });
 
+  keywordsSwitch(keywordsActive);
+}
 
+function keywordsSwitch(keywordsActive) {
   //console.log('######################');
   var countD = 0;
   rawData.forEach(function(d) {
@@ -180,39 +219,41 @@ function handleClick(cb) {
         var bool = String(d).charAt(countK);
 
         if(bool == 1 && k == true) {
-          //console.log('######################');
-          //console.log(bool + ' && ' + keywords[countK] + ' = ' + k);
-          //console.log(countD);
           flag = false;
           throw BreakException;
         }
         countK++;
       });
     } catch (e) {
-      console.log('BREAK ###################### ' + countK);
+      //console.log('BREAK ###################### ' + countK);
       if (e !== BreakException) throw e;
     }
 
-    var opacity = d3.select(sel).style('opacity');
-    if(flag) { //if no keyword found - decrease opacity
-      if(opacity == 1.0) {
-        d3.select(sel).style('opacity', 0.4);
-      } else if(opacity == 0.5) { //slider
-        d3.select(sel).style('opacity', 0.2);
-      } else if(opacity == 0.4) { //keyword
-        d3.select(sel).style('opacity', 0.4);
-      } else if(opacity == 0.2) { //both
-        d3.select(sel).style('opacity', 0.2);
-      }
-    } else { //keyword found - increase opacity
-      if(opacity == 1.0) {
-        d3.select(sel).style('opacity', 1.0);
-      } else if(opacity == 0.5) { //slider
-        d3.select(sel).style('opacity', 0.5);
-      } else if(opacity == 0.4) { //keyword
-        d3.select(sel).style('opacity', 1.0);
-      } else if(opacity == 0.2) { //both
-        d3.select(sel).style('opacity', 0.5);
+    if(d3.select(sel).style('stroke') == "rgb(238, 238, 238)") {
+      //do nothing
+    } else {
+      var opacity = d3.select(sel).style('opacity');
+      if(flag) { //if no keyword found - decrease opacity
+        if(opacity == opHigh) {
+          d3.select(sel).style('opacity', opKey);
+        } else if(opacity == opSld) { //slider
+          d3.select(sel).style('opacity', opLow);
+        } else if(opacity == opKey) { //keyword
+          d3.select(sel).style('opacity', opKey);
+        } else if(opacity == opLow) { //both
+          d3.select(sel).style('opacity', opLow);
+        }
+      } else { //keyword found - increase opacity
+        //console.log(sel + ' - ' + opacity);
+        if(opacity == opHigh) {
+          d3.select(sel).style('opacity', opHigh);
+        } else if(opacity == opSld) { //slider\
+          d3.select(sel).style('opacity', opSld);
+        } else if(opacity == opKey) { //keyword
+          d3.select(sel).style('opacity', opHigh);
+        } else if(opacity == opLow) { //both
+          d3.select(sel).style('opacity', opSld);
+        }
       }
     }
     countD++;
@@ -289,7 +330,7 @@ d3.json('data/data124.json', function(userData) {
          svg.selectAll(".spiral") //loops but does not fill
            .data([[pieces[count], pieces[count+1]]])
          .enter().append('path')
-           .style('opacity', 1.0)
+           .style('opacity', opHigh)
            .style('stroke', color(val)) //just to show it can be colored
            .style('stroke-width', rings*0.53)
            .style("stroke-dasharray", dash)
@@ -322,10 +363,10 @@ svg.selectAll(".axis")
     })
 
 ////SLIDER
-var widthSlider = getWidth() - 70;
+var widthSlider = getWidth() - 90;
 
 var x = d3.scale.linear()
-    .domain([1, 60])
+    .domain([0, 50])
     .range([0, widthSlider])
     .clamp(true);
 
@@ -353,8 +394,12 @@ slider.call(d3.behavior.drag()
     }));
 
 dispatch.on("sliderChange.slider", function(value) {
+  var valueStr = (value/10).toFixed(2);
+  document.getElementById("sliderHeader").innerHTML = "Filter by Sleep Rating > " + valueStr;
+
   sliderHandle.style("left", x(value) + "px")
-  value = value / 10;
+  value = (value/10).toFixed(2);
+
   var count = 0;
   rawData.forEach(function(d) {
     var sel = ".spiral" + count;
@@ -362,25 +407,26 @@ dispatch.on("sliderChange.slider", function(value) {
       var opacity = d3.select(sel).style('opacity');
 
       if(value > rawData[count]) { //decrease opacity
-        if(opacity == 1.0) {
-          d3.select(sel).style('opacity', 0.5);
-        } else if(opacity == 0.5) { //slider
-          d3.select(sel).style('opacity', 0.5);
-        } else if(opacity == 0.4) { //keyword
-          d3.select(sel).style('opacity', 0.2);
-        } else if(opacity == 0.2) { //both
-          d3.select(sel).style('opacity', 0.2);
+        if(opacity == opHigh) {
+          d3.select(sel).style('opacity', opSld);
+        } else if(opacity == opSld) { //slider
+          d3.select(sel).style('opacity', opSld);
+        } else if(opacity == opKey) { //keyword
+          d3.select(sel).style('opacity', opLow);
+        } else if(opacity == opLow) { //both
+          d3.select(sel).style('opacity', opLow);
         }
       } else { //increase opacity
-        if(opacity == 1.0) {
-          d3.select(sel).style('opacity', 1.0);
-        } else if(opacity == 0.5) { //slider
-          d3.select(sel).style('opacity', 1.0);
-        } else if(opacity == 0.4) { //keyword
-          d3.select(sel).style('opacity', 0.4);
-        } else if(opacity == 0.2) { //both
-          d3.select(sel).style('opacity', 0.4);
+        if(opacity == opHigh) {
+          d3.select(sel).style('opacity', opHigh);
+        } else if(opacity == opSld) { //slider
+          d3.select(sel).style('opacity', opHigh);
+        } else if(opacity == opKey) { //keyword
+          d3.select(sel).style('opacity', opKey);
+        } else if(opacity == opLow) { //both
+          d3.select(sel).style('opacity', opKey);
         }
+        //console.log(d3.select(sel).style('opacity'));
       }
     }
     count++;
